@@ -16,3 +16,7 @@ matplotlib==3.8.0
 pretty_midi==0.2.10
 aubio==0.4.9
 celery==5.3.4
+# Guitar-specific libraries
+mingus==0.6.1
+PyGuitarPro==0.6
+pytablib==0.1.1

@@ -8,6 +8,7 @@ import librosa
 import numpy as np
 from typing import List, Dict, Any, Tuple, Optional
 import music21
+from .guitar_utils import constrain_to_guitar_range, detect_guitar_chords
 
 
 def detect_pitches(audio_data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
@@ -24,6 +25,8 @@ def detect_pitches(audio_data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
             - algorithm: Pitch detection algorithm ('yin', 'pyin', 'crepe', default: 'pyin')
             - fmin: Minimum frequency in Hz (default: 65.0, low C)
             - fmax: Maximum frequency in Hz (default: 2093.0, high C)
+            - instrument: Instrument type ('guitar', 'piano', etc., default: None)
+            - guitar_tuning: Guitar tuning as list of MIDI note numbers (default: standard tuning)
             
     Returns:
         Dictionary containing:
@@ -31,6 +34,7 @@ def detect_pitches(audio_data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
             - pitch_confidence: Confidence values for pitch detection
             - notes: List of music21 note objects
             - times: Time points in seconds for each detected pitch
+            - chords: List of detected chords (if instrument is 'guitar')
     """
     y = audio_data['y']
     sr = audio_data['sr']
@@ -38,8 +42,15 @@ def detect_pitches(audio_data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     
     # Set default parameters
     algorithm = kwargs.get('algorithm', 'pyin')
-    fmin = kwargs.get('fmin', 65.0)  # Low C
-    fmax = kwargs.get('fmax', 2093.0)  # High C
+    instrument = kwargs.get('instrument', None)
+    
+    # Set frequency range based on instrument
+    if instrument == 'guitar':
+        fmin = kwargs.get('fmin', 82.41)  # E2 (lowest standard guitar note)
+        fmax = kwargs.get('fmax', 1318.51)  # E6 (high guitar note)
+    else:
+        fmin = kwargs.get('fmin', 65.0)  # Low C
+        fmax = kwargs.get('fmax', 2093.0)  # High C
     
     # Detect pitches using the specified algorithm
     if algorithm == 'yin':
@@ -69,18 +80,30 @@ def detect_pitches(audio_data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     else:
         raise ValueError(f"Unknown pitch detection algorithm: {algorithm}")
     
+    # Apply instrument-specific constraints
+    if instrument == 'guitar':
+        pitches = constrain_to_guitar_range(pitches)
+    
     # Convert time frames to seconds
     times = librosa.times_like(pitches, sr=sr, hop_length=hop_length)
     
     # Convert frequencies to music21 note objects
     notes = frequencies_to_notes(pitches, times, pitch_confidence)
     
-    return {
+    result = {
         'pitches': pitches,
         'pitch_confidence': pitch_confidence,
         'notes': notes,
         'times': times
     }
+    
+    # Detect chords for guitar
+    if instrument == 'guitar':
+        guitar_tuning = kwargs.get('guitar_tuning', None)
+        chords = detect_guitar_chords(notes, tuning=guitar_tuning)
+        result['chords'] = chords
+    
+    return result
 
 
 def frequencies_to_notes(

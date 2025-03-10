@@ -7,9 +7,10 @@ This module contains functions for converting detected pitches and rhythms to mu
 import music21
 import numpy as np
 from typing import List, Dict, Any, Tuple, Optional
+from .guitar_utils import notes_to_tablature, optimize_fretboard_positions
 
 
-def convert_to_notation(pitch_data: Dict[str, Any], rhythm_data: Dict[str, Any], **kwargs) -> music21.stream.Score:
+def convert_to_notation(pitch_data: Dict[str, Any], rhythm_data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     """
     Convert detected pitches and rhythms to music notation.
     
@@ -17,6 +18,7 @@ def convert_to_notation(pitch_data: Dict[str, Any], rhythm_data: Dict[str, Any],
         pitch_data: Dictionary containing pitch detection results
             - notes: List of music21 note objects
             - times: Time points in seconds for each detected pitch
+            - chords: List of detected chords (for guitar)
         rhythm_data: Dictionary containing rhythm detection results
             - tempo: Estimated tempo in BPM
             - time_signature: Detected time signature
@@ -27,13 +29,18 @@ def convert_to_notation(pitch_data: Dict[str, Any], rhythm_data: Dict[str, Any],
             - instrument: Instrument name (default: 'Piano')
             - title: Title of the piece (default: 'Transcribed Score')
             - composer: Composer name (default: 'Audio Processor')
+            - generate_tablature: Whether to generate tablature for guitar (default: False)
+            - guitar_tuning: Guitar tuning as list of MIDI note numbers (default: standard tuning)
             
     Returns:
-        music21 Score object containing the transcribed music
+        Dictionary containing:
+            - score: music21 Score object containing the transcribed music
+            - tablature: Guitar tablature data (if instrument is 'guitar' and generate_tablature is True)
     """
     # Extract data
     notes = pitch_data.get('notes', [])
     times = pitch_data.get('times', [])
+    chords = pitch_data.get('chords', [])
     
     tempo = rhythm_data.get('tempo', 120.0)
     time_signature = rhythm_data.get('time_signature', music21.meter.TimeSignature('4/4'))
@@ -45,6 +52,8 @@ def convert_to_notation(pitch_data: Dict[str, Any], rhythm_data: Dict[str, Any],
     instrument_name = kwargs.get('instrument', 'Piano')
     title = kwargs.get('title', 'Transcribed Score')
     composer = kwargs.get('composer', 'Audio Processor')
+    generate_tablature = kwargs.get('generate_tablature', False)
+    is_guitar = instrument_name.lower() in ['guitar', 'acoustic guitar', 'electric guitar']
     
     # Create a new score
     score = music21.stream.Score()
@@ -78,7 +87,18 @@ def convert_to_notation(pitch_data: Dict[str, Any], rhythm_data: Dict[str, Any],
     # Add the part to the score
     score.insert(0, part)
     
-    return score
+    result = {
+        'score': score
+    }
+    
+    # Generate tablature for guitar if requested
+    if is_guitar and generate_tablature:
+        guitar_tuning = kwargs.get('guitar_tuning', None)
+        tablature_data = notes_to_tablature(notes, tuning=guitar_tuning)
+        optimized_tablature = optimize_fretboard_positions(tablature_data)
+        result['tablature'] = optimized_tablature
+    
+    return result
 
 
 def detect_key_signature(notes: List[music21.note.Note]) -> music21.key.Key:
@@ -257,4 +277,33 @@ def quantize_durations(notes: List[music21.note.Note]) -> List[music21.note.Note
         closest_duration = min(standard_durations, key=lambda x: abs(x - duration))
         note.duration.quarterLength = closest_duration
     
-    return notes 
+    return notes
+
+
+def create_guitar_tablature_part(tablature_data: List[Dict[str, Any]], **kwargs) -> music21.stream.Part:
+    """
+    Create a music21 Part object for guitar tablature.
+    
+    Args:
+        tablature_data: List of tablature dictionaries
+        **kwargs: Additional options
+            - tuning: Guitar tuning as list of string names (default: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'])
+            
+    Returns:
+        music21 Part object containing tablature notation
+    """
+    # This is a placeholder implementation
+    # In a real application, you would create a proper tablature part
+    
+    # Create a tablature part
+    tab_part = music21.stream.Part()
+    tab_part.insert(0, music21.instrument.Guitar())
+    
+    # Add a staff with tablature display
+    tab_staff = music21.stream.Staff()
+    tab_staff.staffType = 'TAB'
+    
+    # Add the staff to the part
+    tab_part.insert(0, tab_staff)
+    
+    return tab_part 

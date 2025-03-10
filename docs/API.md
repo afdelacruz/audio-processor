@@ -41,10 +41,12 @@ Upload an audio file and convert it to sheet music.
 **Request:**
 - `file`: Audio file (multipart/form-data)
 - `options`: JSON string with conversion options (optional)
-  - `instrument_type`: Instrument type to help with pitch detection
+  - `instrument`: Instrument type (e.g., "guitar", "piano", default: "piano")
   - `tempo_detection`: "auto" or specific BPM
   - `key_signature`: "auto" or specific key
   - `time_signature`: "auto" or specific time signature
+  - `generate_tablature`: Whether to generate tablature for guitar (default: true for guitar)
+  - `guitar_tuning`: Guitar tuning as list of MIDI note numbers (default: standard tuning)
 
 **Response:**
 ```json
@@ -71,7 +73,7 @@ Check the status of a sheet music conversion job.
 Download the generated sheet music.
 
 **Query Parameters:**
-- `format`: Output format (musicxml, pdf, midi, png, default: pdf)
+- `format`: Output format (musicxml, pdf, midi, png, tablature, default: pdf)
 
 **Response:**
 - File download
@@ -81,3 +83,19 @@ Get a preview image of the sheet music.
 
 **Response:**
 - PNG image data
+
+### POST /api/sheet-music/detect-tuning
+Detect the guitar tuning from an audio file.
+
+**Request:**
+- `file`: Audio file (multipart/form-data)
+
+**Response:**
+```json
+{
+  "status": "success",
+  "tuning": "Standard",
+  "notes": ["E2", "A2", "D3", "G3", "B3", "E4"],
+  "midi_notes": [40, 45, 50, 55, 59, 64]
+}
+```
