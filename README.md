@@ -19,7 +19,7 @@ A web application for uploading and processing audio files.
 ├── frontend/           # Frontend application
 │   ├── public/         # Static files
 │   └── src/            # Source code
-├── backend/            # Backend server
+├── backend/            # Flask backend server
 │   ├── api/            # API endpoints
 │   ├── auth/           # Authentication
 │   ├── storage/        # File storage management
@@ -35,14 +35,15 @@ A web application for uploading and processing audio files.
 - Tailwind CSS
 
 ### Backend
-- Node.js with Express
-- MongoDB for metadata storage
-- FFmpeg for audio processing
+- Python with Flask
+- MongoDB with PyMongo
+- Librosa and Pydub for audio processing
 
 ## Getting Started
 
 ### Prerequisites
 
+- Python 3.8+
 - Node.js (v14+)
 - MongoDB
 - FFmpeg
@@ -55,10 +56,12 @@ A web application for uploading and processing audio files.
    cd audio-processor
    ```
 
-2. Install backend dependencies
+2. Set up backend
    ```bash
    cd backend
-   npm install
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
    ```
 
 3. Install frontend dependencies
@@ -73,8 +76,8 @@ A web application for uploading and processing audio files.
 
 5. Start the development servers
    ```bash
-   # In backend directory
-   npm run dev
+   # In backend directory with venv activated
+   python app.py
    
    # In frontend directory
    npm start
