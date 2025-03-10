@@ -1,20 +1,34 @@
 # Audio Processor Backend
 
-This directory contains the backend server for the Audio Processor project.
+This directory contains the Flask backend server for the Audio Processor project.
 
 ## Setup
 
 ```bash
-npm install
-npm run dev
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows
+venv\Scripts\activate
+# On macOS/Linux
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the development server
+python app.py
 ```
 
 ## Structure
 
+- `app.py` - Main application entry point
+- `config.py` - Configuration settings
 - `api/` - API endpoints
 - `auth/` - Authentication logic
 - `storage/` - File storage management
 - `processors/` - Audio processing functions
 - `models/` - Database models
-- `middleware/` - Express middleware
 - `utils/` - Utility functions
+- `tests/` - Unit and integration tests
