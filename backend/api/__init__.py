@@ -1,1 +1,5 @@
-# API package initialization
+"""
+API Package
+
+This package contains API endpoints for the application.
+"""
